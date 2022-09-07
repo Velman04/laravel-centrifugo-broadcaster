@@ -111,8 +111,8 @@ interface CentrifugoInterface
      *
      * @param string $userId
      * @param string $channel
-     * @param int $exp
-     * @param array $info
+     * @param int    $exp
+     * @param array  $info
      *
      * @return string
      */

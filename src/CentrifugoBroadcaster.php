@@ -73,7 +73,7 @@ class CentrifugoBroadcaster extends Broadcaster
      * Return the valid authentication response.
      *
      * @param Request $request
-     * @param mixed                    $result
+     * @param mixed   $result
      *
      * @return mixed
      */
@@ -183,9 +183,10 @@ class CentrifugoBroadcaster extends Broadcaster
     /**
      * Make response for client, based on access rights of private channel.
      *
-     * @param bool $accessGranted
+     * @param bool   $accessGranted
      * @param string $channel
      * @param string $client
+     *
      * @return array
      */
     private function makeResponseForPrivateClient(bool $accessGranted, string $channel, string $client): array
