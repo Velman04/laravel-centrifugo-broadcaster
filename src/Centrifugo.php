@@ -31,8 +31,9 @@ class Centrifugo implements CentrifugoInterface
     /**
      * Create a new Centrifugo instance.
      *
-     * @param array|null $config
+     * @param array|null      $config
      * @param HttpClient|null $httpClient
+     *
      * @throws BindingResolutionException
      */
     public function __construct(array $config = null, HttpClient $httpClient = null)
@@ -255,10 +256,10 @@ class Centrifugo implements CentrifugoInterface
     /**
      * Generate private channel token.
      *
-     * @param string $userId
-     * @param string $channel
+     * @param string     $userId
+     * @param string     $channel
      * @param int|Carbon $exp
-     * @param array $info
+     * @param array      $info
      *
      * @return string
      */
@@ -334,8 +335,10 @@ class Centrifugo implements CentrifugoInterface
      *
      * @param string $method
      * @param string $json
-     * @return mixed
+     *
      * @throws GuzzleException
+     *
+     * @return mixed
      */
     protected function sendData(string $method, string $json)
     {
@@ -386,9 +389,9 @@ class Centrifugo implements CentrifugoInterface
      * @param int    $tries
      * @param int    $retriesCounter
      *
-     * @return ResponseInterface
      * @throws GuzzleException
      *
+     * @return ResponseInterface
      */
     private function postRequest(string $url, array $configs, int $tries = 1, int $retriesCounter = 0): ResponseInterface
     {
