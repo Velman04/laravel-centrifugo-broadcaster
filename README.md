@@ -21,7 +21,7 @@ based on:
 
 ## Features
 
-- Compatible with latest [Centrifugo 3.1.x](https://github.com/centrifugal/centrifugo/) 🚀
+- Compatible with latest [Centrifugo 4.0.0](https://github.com/centrifugal/centrifugo/) 🚀
 - Wrapper over [Centrifugo HTTP API](https://centrifugal.github.io/centrifugo/server/http_api/) 🔌
 - Authentication with JWT token (HMAC algorithm) for anonymous, authenticated user and private channel 🗝️
 
@@ -30,7 +30,7 @@ based on:
 - PHP >= 7.4
 - Laravel 8.75 - 9.x
 - guzzlehttp/guzzle 6 - 7
-- Centrifugo Server 2.8.2 or newer (see [here](https://github.com/centrifugal/centrifugo))
+- Centrifugo Server 4.0.0 or newer (see [here](https://github.com/centrifugal/centrifugo))
 
 ## Installation
 
@@ -44,9 +44,6 @@ Open your `config/app.php` and add the following to the providers array:
 
 ```php
 return [
-
-    // .... //
-    
     'providers' => [
         // Add service provider ( Laravel 5.4 or below )
         Opekunov\Centrifugo\CentrifugoServiceProvider::class,
@@ -54,9 +51,6 @@ return [
         // And uncomment BroadcastServiceProvider
         App\Providers\BroadcastServiceProvider::class,
     ],
-    
-    // .... //
-    
 ];
 ```
 
@@ -64,9 +58,6 @@ Open your `config/broadcasting.php` and add new connection like this:
 
 ```php
 return [
-
-        // .... //
-    
         'centrifugo' => [
             'driver' => 'centrifugo',
             'secret'  => env('CENTRIFUGO_SECRET'),
@@ -79,9 +70,6 @@ return [
             'timeout' => env('CENTRIFUGO_TIMEOUT', 3), // Float describing the total timeout of the request to centrifugo api in seconds. Use 0 to wait indefinitely (the default is 3)
             'tries' => env('CENTRIFUGO_TRIES', 1) //Number of times to repeat the request, in case of failure (the default is 1)
         ],
-        
-       // .... //
-       
 ];
 ```
 
@@ -117,48 +105,103 @@ To configure Centrifugo server, read [official documentation](https://centrifuga
 For broadcasting events, see [official documentation of laravel](https://laravel.com/docs/8.x/broadcasting)
 
 ### Authentication example:
-
-Laravel
-
 ```php
-// routes/channels.php
+// routes/web.php
+use App\Http\Controllers\Centrifuge\{
+    ClientConnectionToken as CentrifugeClientConnectionToken,
+    ChannelConnectionToken as CentrifugeChannelConnectionToken
+};
 
-// Private channel. You can write channel name without prefix $
-Broadcast::channel('private:channel', function (){
-    // Some auth logic for example:
-    return \Auth::user()->group === 'private-channel-group';
-});
-
-// Public channel
-Broadcast::channel('public:channel', function (){
-    return true;
-});
+// Centrifugal
+Route::prefix('centrifuge')
+    ->name('centrifuge.')
+    ->group(function () {
+        Route::post('client-connection-token', CentrifugeClientConnectionToken::class);
+        Route::post('channel-connection-token', CentrifugeChannelConnectionToken::class);
+    });
 ```
 
-Frontend. See documentation [centrifugal/centrifuge-js](https://github.com/centrifugal/centrifuge-js)
+### Basic controller route /centrifuge:
+```php
+namespace App\Http\Controllers\Centrifuge;
 
-```js
-// set default Laravel broadcasting auth path 
-var config = {subscribeEndpoint: '/broadcasting/auth'};
-var centrifuge = new Centrifuge('wss://centrifuge.example.com/connection/websocket', config);
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 
-// CONNECTION_TOKEN must be obtained via generateConnectionToken ()
-centrifuge.setToken("CONNECTION_TOKEN");
-var subscription = centrifuge.subscribe("$private:channel", function (ctx) {
-		console.log('ctx');
-});
+class CentrifugeBaseController extends Controller
+{
+    public function userId(Request $request): int
+    {
+        return $request->user()->id ?? 0;
+    }
 
-centrifuge.connect();
+    public function channel(Request $request): string|null
+    {
+        return $request->input('channel', null);
+    }
+
+    public function tokenValidityPeriod(): Carbon
+    {
+        return now()->addDay()->endOfDay();
+    }
+
+    public function email(Request $request): string
+    {
+        return $request->user()->email ?? 'Guest';
+    }
+}
+```
+
+### Controller route /centrifuge/client-connection-token:
+```php
+namespace App\Http\Controllers\Centrifuge;
+
+use Illuminate\Http\{Request, JsonResponse};
+use Opekunov\Centrifugo\Centrifugo;
+
+class ClientConnectionToken extends CentrifugeBaseController
+{
+    public function __invoke(Request $request, Centrifugo $centrifugo): JsonResponse
+    {
+        return response()->json([
+            'token' => $centrifugo->generateConnectionToken($this->userId($request), 0, [
+                'email' => $this->email($request),
+            ]),
+        ]);
+    }
+}
+```
+
+### Controller route /centrifuge/channel-connection-token:
+```php
+namespace App\Http\Controllers\Centrifuge;
+
+use Illuminate\Http\{Request, JsonResponse};
+use Opekunov\Centrifugo\Centrifugo;
+
+class ChannelConnectionToken extends CentrifugeBaseController
+{
+    public function __invoke(Request $request, Centrifugo $centrifugo): JsonResponse
+    {
+        if ($request->has('channel')) {
+            $token = $centrifugo->generatePrivateChannelToken($this->userId($request), $this->channel($request), $this->tokenValidityPeriod(), [
+                'email' => $this->email($request)
+            ]);
+        } else {
+            $token = null;
+        }
+        return response()->json([
+            'token' => $token,
+        ]);
+    }
+}
 ```
 
 ### Broadcasting example
-
 Create event (for example SendMessage) with artisan `php artisan make:event SendMessageEvent`
 
 ```php
-<?php
-// App/Events/SendMessageEvent.php
-
 namespace App\Events;
 
 use Illuminate\Broadcasting\InteractsWithSockets;
@@ -167,7 +210,6 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-//Use "implements ShouldBroadcast" if you want add event to queue
 class SendMessageEvent implements ShouldBroadcastNow
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
@@ -189,7 +231,6 @@ class SendMessageEvent implements ShouldBroadcastNow
      */
     public function broadcastAs()
     {
-        //example event broadcast name. Show in Web Socket JSON
         return 'message.new';
     }
 
@@ -218,10 +259,75 @@ class SendMessageEvent implements ShouldBroadcastNow
         // return new Channel('public:chat');
     }
 }
-
 ```
 
-A simple client usage example:
+### Method for get token
+```js
+function getToken(url, ctx) {
+    return new Promise(async (resolve, reject) => {
+        await fetch(url, {
+            method: 'POST',
+            headers: new Headers({'Content-Type': 'application/json'}),
+            body: JSON.stringify(ctx)
+        })
+            .then(res => {
+                if (!res.ok) {
+                    throw new Error(`Unexpected status code ${res.status}`);
+                }
+                return res.json();
+            })
+            .then(data => {
+                resolve(data.token);
+            })
+            .catch(err => {
+                reject(err);
+            });
+    });
+}
+```
+
+### Client connection token
+```js
+import { Centrifuge } from "centrifuge";
+
+const client = new Centrifuge(
+    'ws://localhost:8000/connection/websocket',
+    {
+        token: 'JWT-GENERATED-ON-BACKEND-SIDE',
+        getToken: await function (ctx) {
+            return getToken('/centrifuge/connection_token', ctx);
+        }
+    }
+);
+
+client.connect();
+```
+
+> If initial token is not provided, but `getToken` is specified – then
+> SDK should assume that developer wants to use token authentication. In
+> this case SDK should attempt to get a connection token before
+> establishing an initial connection.
+
+### Channel subscription token
+```js
+// Public channel
+const subPublicChannel = client.newSubscription("public:chat").subscribe();
+
+// Private channel
+const subPrivateChannel = client.newSubscription("$private:chat", {
+    token: 'JWT-GENERATED-ON-BACKEND-SIDE',
+    getToken: await function (ctx) {
+        // ctx has channel in the Subscription token case.
+        return getToken('/centrifuge/subscription_token', ctx);
+    },
+}).subscribe();
+```
+> If initial token is not provided, but `getToken` is specified – then
+> SDK should assume that developer wants to use token authorization for
+> a channel subscription. In this case SDK should attempt to get a
+> subscription token before initial subscribe.
+
+### A simple client usage example:
 
 ```php
 <?php
@@ -279,7 +385,7 @@ class ExampleController
 | channels()                                                                          | Get channels information (list of currently active channels).                         |
 | info()                                                                              | Get stats information about running server nodes.                                     |
 | generateConnectionToken(string $userId, int $exp, array $info)                      | Generate connection token.                                                            |
-| generatePrivateChannelToken(string $client, string $channel, int $exp, array $info) | Generate private channel token.                                                       |
+| generatePrivateChannelToken(string $userId, string $channel, int $exp, array $info) | Generate private channel token.                                                       |
 
 ## License
 

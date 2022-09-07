@@ -104,19 +104,19 @@ interface CentrifugoInterface
      *
      * @return string
      */
-    public function generateConnectionToken(string $userId = '', int $exp = 0, array $info = []);
+    public function generateConnectionToken(string $userId = '', int $exp = 0, array $info = []): string;
 
     /**
      * Generate private channel token.
      *
-     * @param string $client
+     * @param string $userId
      * @param string $channel
-     * @param int    $exp
-     * @param array  $info
+     * @param int $exp
+     * @param array $info
      *
      * @return string
      */
-    public function generatePrivateChannelToken(string $client, string $channel, int $exp = 0, array $info = []);
+    public function generatePrivateChannelToken(string $userId, string $channel, int $exp = 0, array $info = []): string;
 
     /**
      * Can show Node info when return auth token.

@@ -8,17 +8,20 @@ use Carbon\Carbon;
 use GuzzleHttp\Client as HttpClient;
 use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\ConnectException;
+use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Exception\TransferException;
+use Illuminate\Contracts\Container\BindingResolutionException;
 use Opekunov\Centrifugo\Contracts\CentrifugoInterface;
+use Psr\Http\Message\ResponseInterface;
 
 class Centrifugo implements CentrifugoInterface
 {
     const API_PATH = '/api';
 
     /**
-     * @var \GuzzleHttp\Client
+     * @var HttpClient
      */
-    protected $httpClient;
+    protected HttpClient $httpClient;
 
     /**
      * @var array
@@ -28,8 +31,9 @@ class Centrifugo implements CentrifugoInterface
     /**
      * Create a new Centrifugo instance.
      *
-     * @param array              $config
-     * @param \GuzzleHttp\Client $httpClient
+     * @param array|null $config
+     * @param HttpClient|null $httpClient
+     * @throws BindingResolutionException
      */
     public function __construct(array $config = null, HttpClient $httpClient = null)
     {
@@ -49,7 +53,7 @@ class Centrifugo implements CentrifugoInterface
      *
      * @return array
      */
-    protected function initConfiguration(array $config)
+    protected function initConfiguration(array $config): array
     {
         $defaults = [
             'url'            => 'http://localhost:8000',
@@ -251,20 +255,20 @@ class Centrifugo implements CentrifugoInterface
     /**
      * Generate private channel token.
      *
-     * @param string     $client
-     * @param string     $channel
+     * @param string $userId
+     * @param string $channel
      * @param int|Carbon $exp
-     * @param array      $info
+     * @param array $info
      *
      * @return string
      */
-    public function generatePrivateChannelToken(string $client, string $channel, $exp = 0, array $info = []): string
+    public function generatePrivateChannelToken(string $userId, string $channel, $exp = 0, array $info = []): string
     {
         if (gettype($exp) !== 'integer') {
             $exp = $exp->unix();
         }
         $header = ['typ' => 'JWT', 'alg' => 'HS256'];
-        $payload = ['channel' => $channel, 'client' => $client];
+        $payload = ['channel' => $channel, 'sub' => $userId];
         if (!empty($info)) {
             $payload['info'] = $info;
         }
@@ -286,7 +290,7 @@ class Centrifugo implements CentrifugoInterface
      *
      * @return string
      */
-    protected function getSecret()
+    protected function getSecret(): string
     {
         return $this->config['secret'];
     }
@@ -299,7 +303,7 @@ class Centrifugo implements CentrifugoInterface
      *
      * @return mixed
      */
-    protected function send($method, array $params = [])
+    protected function send(string $method, array $params = [])
     {
         $json = json_encode(['method' => $method, 'params' => $params]);
 
@@ -329,9 +333,9 @@ class Centrifugo implements CentrifugoInterface
      * Send json data to centrifugo server.
      *
      * @param string $method
-     * @param array  $params
-     *
+     * @param string $json
      * @return mixed
+     * @throws GuzzleException
      */
     protected function sendData(string $method, string $json)
     {
@@ -382,11 +386,11 @@ class Centrifugo implements CentrifugoInterface
      * @param int    $tries
      * @param int    $retriesCounter
      *
-     * @throws \GuzzleHttp\Exception\GuzzleException
+     * @return ResponseInterface
+     * @throws GuzzleException
      *
-     * @return mixed
      */
-    private function postRequest(string $url, array $configs, int $tries = 1, int $retriesCounter = 0)
+    private function postRequest(string $url, array $configs, int $tries = 1, int $retriesCounter = 0): ResponseInterface
     {
         try {
             return $this->httpClient->post($url, $configs);
@@ -405,7 +409,7 @@ class Centrifugo implements CentrifugoInterface
      *
      * @return string
      */
-    protected function prepareUrl()
+    protected function prepareUrl(): string
     {
         $address = rtrim($this->config['url'], '/');
         $apiPath = $this->config['api_path'] ?? self::API_PATH;
@@ -425,7 +429,7 @@ class Centrifugo implements CentrifugoInterface
      *
      * @return string
      */
-    private function urlsafeB64Encode($input)
+    private function urlsafeB64Encode(string $input): string
     {
         return str_replace('=', '', strtr(base64_encode($input), '+/', '-_'));
     }
@@ -438,7 +442,7 @@ class Centrifugo implements CentrifugoInterface
      *
      * @return string
      */
-    private function sign($msg, $key)
+    private function sign(string $msg, string $key): string
     {
         return hash_hmac('sha256', $msg, $key, true);
     }

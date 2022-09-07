@@ -2,10 +2,13 @@
 
 namespace Opekunov\Centrifugo\Tests\Unit;
 
+use Exception;
 use GuzzleHttp\Exception\ConnectException;
+use Illuminate\Contracts\Container\BindingResolutionException;
 use Opekunov\Centrifugo\Centrifugo;
+use Opekunov\Centrifugo\Tests\TestCase;
 
-class CentrifugoTest extends \Opekunov\Centrifugo\Tests\TestCase
+class CentrifugoTest extends TestCase
 {
     public function testGenerateToken()
     {
@@ -94,6 +97,10 @@ class CentrifugoTest extends \Opekunov\Centrifugo\Tests\TestCase
         ], $stats);
     }
 
+    /**
+     * @throws BindingResolutionException
+     * @throws Exception
+     */
     public function testTimeoutFunction()
     {
         $timeout = 3;
@@ -116,7 +123,7 @@ class CentrifugoTest extends \Opekunov\Centrifugo\Tests\TestCase
 
         try {
             $badCentrifugo->publish('test-channel', ['event' => 'test-event']);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $end = microtime(true);
             $eval = $end - $start;
             $this->assertTrue($eval < $timeout + $delta);
@@ -125,6 +132,10 @@ class CentrifugoTest extends \Opekunov\Centrifugo\Tests\TestCase
         }
     }
 
+    /**
+     * @throws BindingResolutionException
+     * @throws Exception
+     */
     public function testTriesFunction()
     {
         $timeout = 1;
@@ -148,7 +159,7 @@ class CentrifugoTest extends \Opekunov\Centrifugo\Tests\TestCase
 
         try {
             $badCentrifugo->publish('test-channel', ['event' => 'test-event']);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $end = microtime(true);
             $eval = $end - $start;
             $this->assertTrue($eval < ($timeout + $delta) * $tries);

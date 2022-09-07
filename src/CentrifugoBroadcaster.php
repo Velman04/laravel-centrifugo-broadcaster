@@ -7,6 +7,10 @@ namespace Opekunov\Centrifugo;
 use Exception;
 use Illuminate\Broadcasting\Broadcasters\Broadcaster;
 use Illuminate\Broadcasting\BroadcastException;
+use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Contracts\Routing\ResponseFactory;
+use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class CentrifugoBroadcaster extends Broadcaster
@@ -31,9 +35,9 @@ class CentrifugoBroadcaster extends Broadcaster
     /**
      * Authenticate the incoming request for a given channel.
      *
-     * @param \Illuminate\Http\Request $request
+     * @param Request $request
      *
-     * @return mixed
+     * @return Application|ResponseFactory|Response
      */
     public function auth($request)
     {
@@ -68,7 +72,7 @@ class CentrifugoBroadcaster extends Broadcaster
     /**
      * Return the valid authentication response.
      *
-     * @param \Illuminate\Http\Request $request
+     * @param Request $request
      * @param mixed                    $result
      *
      * @return mixed
@@ -109,11 +113,11 @@ class CentrifugoBroadcaster extends Broadcaster
     /**
      * Get client from request.
      *
-     * @param \Illuminate\Http\Request $request
+     * @param Request $request
      *
      * @return string
      */
-    private function getClientFromRequest($request)
+    private function getClientFromRequest(Request $request): string
     {
         return $request->get('client', '');
     }
@@ -121,11 +125,11 @@ class CentrifugoBroadcaster extends Broadcaster
     /**
      * Get channels from request.
      *
-     * @param \Illuminate\Http\Request $request
+     * @param Request $request
      *
      * @return array
      */
-    private function getChannelsFromRequest($request)
+    private function getChannelsFromRequest(Request $request): array
     {
         $channels = $request->get('channels', []);
 
@@ -139,7 +143,7 @@ class CentrifugoBroadcaster extends Broadcaster
      *
      * @return string
      */
-    private function getChannelName(string $channel)
+    private function getChannelName(string $channel): string
     {
         return $this->isPrivateChannel($channel) ? substr($channel, 1) : $channel;
     }
@@ -164,7 +168,7 @@ class CentrifugoBroadcaster extends Broadcaster
      *
      * @return array
      */
-    private function makeResponseForClient(bool $access_granted, string $client)
+    private function makeResponseForClient(bool $access_granted, string $client): array
     {
         $info = [];
 
@@ -179,14 +183,12 @@ class CentrifugoBroadcaster extends Broadcaster
     /**
      * Make response for client, based on access rights of private channel.
      *
-     * @param bool   $accessGranted
+     * @param bool $accessGranted
      * @param string $channel
      * @param string $client
-     * @param bool   $showInfo
-     *
      * @return array
      */
-    private function makeResponseForPrivateClient(bool $accessGranted, string $channel, string $client)
+    private function makeResponseForPrivateClient(bool $accessGranted, string $channel, string $client): array
     {
         $info = [];
         $showInfo = $this->centrifugo->showNodeInfo();
