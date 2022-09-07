@@ -100,9 +100,16 @@ BROADCAST_DRIVER=centrifugo
 
 ## Basic Usage
 
-To configure Centrifugo server, read [official documentation](https://centrifugal.github.io/centrifugo/)
+To configure Centrifugo server, read [official documentation](https://centrifugal.dev/)
 
-For broadcasting events, see [official documentation of laravel](https://laravel.com/docs/8.x/broadcasting)
+For broadcasting events, see [official documentation of laravel](https://laravel.com/docs/9.x/broadcasting)
+
+### Open your `app/Http/Middleware/VerifyCsrfToken.php` and add the following to the except array:
+```php
+protected $except = [
+    '/centrifuge/*'
+];
+```
 
 ### Authentication example:
 ```php
@@ -121,7 +128,7 @@ Route::prefix('centrifuge')
     });
 ```
 
-### Basic controller route /centrifuge:
+### Basic controller for route centrifuge: `php artisan make:controller CentrifugeBaseController`
 ```php
 namespace App\Http\Controllers\Centrifuge;
 
@@ -153,7 +160,7 @@ class CentrifugeBaseController extends Controller
 }
 ```
 
-### Controller route /centrifuge/client-connection-token:
+### Client connection token controller: `php artisan make:controller Centrifuge/ClientConnectionToken`
 ```php
 namespace App\Http\Controllers\Centrifuge;
 
@@ -173,7 +180,7 @@ class ClientConnectionToken extends CentrifugeBaseController
 }
 ```
 
-### Controller route /centrifuge/channel-connection-token:
+### Channel connection token controller: `php artisan make:controller Centrifuge/ChannelConnectionToken`
 ```php
 namespace App\Http\Controllers\Centrifuge;
 
@@ -295,7 +302,7 @@ const client = new Centrifuge(
     {
         token: 'JWT-GENERATED-ON-BACKEND-SIDE',
         getToken: await function (ctx) {
-            return getToken('/centrifuge/connection_token', ctx);
+            return getToken('/centrifuge/client-connection-token', ctx);
         }
     }
 );
@@ -318,7 +325,7 @@ const subPrivateChannel = client.newSubscription("$private:chat", {
     token: 'JWT-GENERATED-ON-BACKEND-SIDE',
     getToken: await function (ctx) {
         // ctx has channel in the Subscription token case.
-        return getToken('/centrifuge/subscription_token', ctx);
+        return getToken('/centrifuge/channel-connection-token', ctx);
     },
 }).subscribe();
 ```
