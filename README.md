@@ -1,11 +1,11 @@
-<p align="center">Documentation <b>EN</b> | <a href="https://github.com/opekunov/laravel-centrifugo-broadcaster/blob/master/README_RU.md">RU</a></p>
+<p align="center">Documentation <b>EN</b> | <a href="https://github.com/Velman04/laravel-centrifugo-broadcaster/blob/master/README_RU.md">RU</a></p>
 
 <p align="center">
-<a href="https://github.com/Opekunov/laravel-centrifugo-broadcaster/releases"><img src="https://img.shields.io/github/release/Opekunov/laravel-centrifugo-broadcaster.svg?style=flat-square" alt="Latest Version"></a>
+<a href="https://github.com/Velman04/laravel-centrifugo-broadcaster/releases"><img src="https://img.shields.io/github/release/Velman04/laravel-centrifugo-broadcaster.svg?style=flat-square" alt="Latest Version"></a>
 <a href="https://github.styleci.io/repos/372425291?branch=master"><img src="https://github.styleci.io/repos/372425291/shield?branch=master" alt="StyleCI"></a>
-<a href="https://scrutinizer-ci.com/g/Opekunov/laravel-centrifugo-broadcaster/?branch=master"><img src="https://scrutinizer-ci.com/g/Opekunov/laravel-centrifugo-broadcaster/badges/quality-score.png?b=master" alt="StyleCI"></a>
-<a href="https://packagist.org/packages/opekunov/laravel-centrifugo-broadcaster"><img src="https://img.shields.io/packagist/dt/opekunov/laravel-centrifugo-broadcaster.svg?style=flat-square" alt="Total Downloads"></a>
-<a href="https://github.com/opekunov/laravel-centrifugo-broadcaster/blob/master/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="Software License"></a>
+<a href="https://scrutinizer-ci.com/g/Velman04/laravel-centrifugo-broadcaster/?branch=master"><img src="https://scrutinizer-ci.com/g/Velman04/laravel-centrifugo-broadcaster/badges/quality-score.png?b=master" alt="StyleCI"></a>
+<a href="https://packagist.org/packages/Velman04/laravel-centrifugo-broadcaster"><img src="https://img.shields.io/packagist/dt/Velman04/laravel-centrifugo-broadcaster.svg?style=flat-square" alt="Total Downloads"></a>
+<a href="https://github.com/Velman04/laravel-centrifugo-broadcaster/blob/master/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="Software License"></a>
 </p>
 
 <h1 align="center">Laravel Centrifugo Broadcaster</h1>
@@ -37,7 +37,7 @@ based on:
 Require this package with composer:
 
 ```bash
-composer req opekunov/laravel-centrifugo-broadcaster
+composer req Velman04/laravel-centrifugo-broadcaster
 ```
 
 Open your `config/app.php` and add the following to the providers array:
@@ -128,7 +128,8 @@ Route::prefix('centrifuge')
     });
 ```
 
-### Basic controller for route centrifuge: `php artisan make:controller CentrifugeBaseController`
+### Basic controller for route centrifuge:
+Command for create controller: `php artisan make:controller CentrifugeBaseController`
 ```php
 namespace App\Http\Controllers\Centrifuge;
 
@@ -160,7 +161,8 @@ class CentrifugeBaseController extends Controller
 }
 ```
 
-### Client connection token controller: `php artisan make:controller Centrifuge/ClientConnectionToken`
+### Client connection token controller:
+Command for create controller: `php artisan make:controller Centrifuge/ClientConnectionToken`
 ```php
 namespace App\Http\Controllers\Centrifuge;
 
@@ -180,7 +182,8 @@ class ClientConnectionToken extends CentrifugeBaseController
 }
 ```
 
-### Channel connection token controller: `php artisan make:controller Centrifuge/ChannelConnectionToken`
+### Channel connection token controller:
+Command for create controller: `php artisan make:controller Centrifuge/ChannelConnectionToken`
 ```php
 namespace App\Http\Controllers\Centrifuge;
 
@@ -397,4 +400,4 @@ class ExampleController
 ## License
 
 The MIT License (MIT). Please
-see [License File](https://github.com/opekunov/laravel-centrifugo-broadcaster/blob/master/LICENSE) for more information.
+see [License File](https://github.com/Velman04/laravel-centrifugo-broadcaster/blob/master/LICENSE) for more information.
